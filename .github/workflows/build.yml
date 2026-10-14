@@ -39,7 +39,6 @@ jobs:
 
           cat > gradle.properties <<'EOF'
           org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
-          android.useAndroidX=true
           EOF
 
           cat > app/build.gradle.kts <<'EOF'
@@ -51,8 +50,8 @@ jobs:
                   applicationId = "com.lysy.translator"
                   minSdk = 26
                   targetSdk = 34
-                  versionCode = 1
-                  versionName = "1.0"
+                  versionCode = 2
+                  versionName = "1.1"
               }
               compileOptions {
                   sourceCompatibility = JavaVersion.VERSION_17
@@ -155,8 +154,8 @@ jobs:
               private WebView web;
 
               @Override
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
+              protected void onCreate(Bundle b) {
+                  super.onCreate(b);
                   web = new WebView(this);
                   web.setBackgroundColor(0xFF0F0C29);
                   web.setVerticalScrollBarEnabled(false);
@@ -173,37 +172,12 @@ jobs:
 
               private class Bridge {
                   @JavascriptInterface
-                  public void copy(String text) {
-                      ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                      cm.setPrimaryClip(ClipData.newPlainText("lysy", text));
-                  }
-
-                  @JavascriptInterface
-                  public void share(String text) {
+                  public void copy(String t) {
                       runOnUiThread(() -> {
-                          Intent i = new Intent(Intent.ACTION_SEND);
-                          i.setType("text/plain");
-                          i.putExtra(Intent.EXTRA_TEXT, text);
-                          startActivity(Intent.createChooser(i, "Поделиться"));
+                          ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                          cm.setPrimaryClip(ClipData.newPlainText("lysy", t));
                       });
                   }
 
                   @JavascriptInterface
-                  public void vibrate() {
-                      runOnUiThread(() -> web.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP));
-                  }
-              }
-          }
-          EOF
-
-          cat > app/src/main/assets/index.html <<'EOF'
-          <!DOCTYPE html>
-          <html lang="ru">
-          <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-          <title>Лысый переводчик</title>
-          <style>
-          *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-          body{font-family:system-ui,Roboto,sans-serif;background:#0F0C29;color:#fff;overflow-x:hidden;padding:24px 16px 40px;min-height:100vh}
-          .blob{position:fixed;border-radius:50%;filter:blur(70px);opacity:.55;z-index:-1;animation:fl 14s ease-in-out
+                  public void share(String
