@@ -180,4 +180,4 @@ jobs:
                   }
 
                   @JavascriptInterface
-                  public void share(String
+                  public void share(String)
