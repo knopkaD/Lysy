@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Лысый переводчик</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:system-ui,Roboto,sans-serif;background:#0F0C29;color:#fff;padding:24px 16px 40px;min-height:100vh;overflow-x:hidden}
+.blob{position:fixed;border-radius:50%;filter:blur(70px);opacity:.5;z-index:-1}
+.b1{width:300px;height:300px;background:#7F5AF0;top:-80px;left:-100px}
+.b2{width:280px;height:280px;background:#FF4D9D;bottom:-60px;right:-90px}
+header{text-align:center;margin-bottom:20px}
+.head{font-size:60px;display:inline-block;animation:bo 2.4s ease-in-out infinite}
+@keyframes bo{50%{transform:translateY(-10px) rotate(6deg)}}
+h1{font-size:28px;font-weight:900;background:linear-gradient(90deg,#B8A4FF,#FF7EB6,#FFD29D);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{opacity:.65;margin-top:4px}
+.mode{display:flex;align-items:center;background:rgba(255,255,255,.08);border-radius:50px;padding:6px;margin-bottom:14px}
+.mode span{flex:1;text-align:center;font-weight:700}
+.swap{width:46px;height:46px;border-radius:50%;border:none;color:#fff;font-size:20px;background:linear-gradient(135deg,#7F5AF0,#FF4D9D);transition:transform .4s}
+.swap.rot{transform:rotate(180deg)}
+.card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:16px;margin-bottom:14px}
+.label{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;opacity:.55;margin-bottom:8px}
+textarea{width:100%;min-height:100px;background:none;border:none;outline:none;resize:none;color:#fff;font-size:20px;font-family:inherit}
+textarea::placeholder{color:rgba(255,255,255,.35)}
+.out{min-height:100px;font-size:21px;font-weight:600;word-break:break-word;white-space:pre-wrap}
+.out.empty{opacity:.35;font-weight:400}
+.btns{display:flex;gap:10px;margin-top:12px}
+.btn{flex:1;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-size:15px;font-weight:600}
+.btn:active{transform:scale(.95)}
+.btn.main{background:linear-gradient(135deg,#7F5AF0,#FF4D9D);border:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 14px;border-radius:50px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:14px}
+.rule{font-size:14px;opacity:.8;line-height:1.5}.rule b{color:#FFB0D0}
+.toast{position:fixed;left:50%;bottom:40px;transform:translate(-50%,120px);background:linear-gradient(135deg,#7F5AF0,#FF4D9D);padding:12px 22px;border-radius:50px;font-weight:700;transition:transform .35s}
+.toast.show{transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<header>
+  <div class="head">👨‍🦲</div>
+  <h1>Лысый переводчик</h1>
+  <div class="sub">Присивесет! Касак деселаса?</div>
+</header>
+<div class="mode">
+  <span id="from">Русский</span>
+  <button class="swap" id="swap">⇄</button>
+  <span id="to">Лысый</span>
+</div>
+<div class="card">
+  <div class="label">Текст</div>
+  <textarea id="input" placeholder="Введите текст..."></textarea>
+</div>
+<div class="card">
+  <div class="label">Перевод ✨</div>
+  <div class="out empty" id="output">Здесь появится перевод</div>
+  <div class="btns">
+    <button class="btn main" id="copy">📋 Копировать</button>
+    <button class="btn" id="share">📤 Поделиться</button>
+    <button class="btn" id="clear" style="flex:.4">✕</button>
+  </div>
+</div>
+<div class="card">
+  <div class="label">Примеры</div>
+  <div class="chips" id="chips"></div>
+</div>
+<div class="card">
+  <div class="label">Правило</div>
+  <div class="rule">После каждой гласной добавляется <b>«с» + та же гласная</b>.<br>
+  при<b>си</b>ве<b>се</b>т · ка<b>са</b>к · де<b>се</b>ла<b>са</b></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+var $=function(i){return document.getElementById(i)};
+var input=$('input'),output=$('output'),reverse=false,last='';
+function toLysy(t){
+  return t.replace(/[a-zа-яё]+/gi,function(w){
+    var caps=w.length>1&&w===w.toUpperCase();
+    return w.replace(/[аеёиоуыэюяaeiou]/gi,function(v){
+      var l=v.toLowerCase(),a=(/[a-z]/.test(l)?'s':'с')+l;
+      return v+(caps?a.toUpperCase():a);
+    });
+  });
+}
+function fromLysy(t){return t.replace(/([аеёиоуыэюяaeiou])[сs]\1/gi,'$1')}
+function update(){
+  var t=input.value;
+  if(!t.trim()){output.className='out empty';output.textContent='Здесь появится перевод';last='';return}
+  last=reverse?fromLysy(t):toLysy(t);
+  output.className='out';output.textContent=last;
+}
+function toast(m){var e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(e.t);e.t=setTimeout(function(){e.classList.remove('show')},1600)}
+function tap(){try{Android.vibrate()}catch(e){}}
+input.addEventListener('input',update);
+$('swap').onclick=function(){
+  tap();reverse=!reverse;$('swap').classList.toggle('rot');
+  $('from').textContent=reverse?'Лысый':'Русский';
+  $('to').textContent=reverse?'Русский':'Лысый';
+  if(last)input.value=last;update();chips();
+};
+$('copy').onclick=function(){
+  if(!last)return toast('Нечего копировать');tap();
+  try{Android.copy(last)}catch(e){navigator.clipboard&&navigator.clipboard.writeText(last)}
+  toast('Скосописиросовасаносо! ✅');
+};
+$('share').onclick=function(){
+  if(!last)return toast('Сначала введите текст');tap();
+  try{Android.share(last)}catch(e){navigator.share?navigator.share({text:last}):toast('Недоступно')}
+};
+$('clear').onclick=function(){tap();input.value='';update();input.focus()};
+var EX=['Привет','Как дела?','Небоскрёб','Я тебя люблю','Доброе утро','Лысый'];
+function chips(){
+  $('chips').innerHTML='';
+  EX.forEach(function(w){
+    var b=document.createElement('button');b.className='chip';
+    b.textContent=reverse?toLysy(w):w;
+    b.onclick=function(){tap();input.value=b.textContent;update()};
+    $('chips').appendChild(b);
+  });
+}
+chips();
+</script>
+</body>
+</html>
